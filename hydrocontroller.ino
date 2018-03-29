@@ -23,7 +23,7 @@ void loop() {
 		// read the incoming byte:
 		incomingByte = Serial.read();
 		if (isAlpha(incomingByte)) {
-			Serial.println(incomingByte);
+			Serial.println(char(incomingByte));
 			switch (incomingByte) {
 				case 'H':
 				case 'h':
