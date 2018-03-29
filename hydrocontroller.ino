@@ -5,6 +5,13 @@
 
 #define BAUD_RATE 9600
 
+enum mode_t {
+	manual,
+	automatic
+};
+
+mode_t mode; // current mode of hydrocontroller
+
 int incomingByte = 0;	// for incoming serial data
 
 void printHelp() {
@@ -12,9 +19,20 @@ void printHelp() {
 	Serial.println("H or h - print help");
 }
 
+void setup_automatic() {
+	mode = automatic;
+	Serial.println("Automatic mode");
+}
+
+void setup_manual() {
+	mode = manual;
+	Serial.println("Manual mode");
+}
+
 // the setup routine runs once when you press reset:
 void setup() {
 	Serial.begin(BAUD_RATE);
+	setup_automatic();
 }
 
 // the loop routine runs over and over again forever:
@@ -28,6 +46,14 @@ void loop() {
 				case 'H':
 				case 'h':
 					printHelp();
+					break;
+				case 'a':
+				case 'A': // Switch to automatic mode
+					setup_automatic();
+					break;
+				case 'm':
+				case 'M': // Switch to manual mode
+					setup_manual();
 					break;
 				default:
 					Serial.println("Wrong command");
