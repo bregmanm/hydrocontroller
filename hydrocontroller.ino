@@ -82,58 +82,59 @@ void setup() {
 	setup_automatic();
 }
 
-// the loop routine runs over and over again forever:
-void loop() {
-	if (Serial.available() > 0) {
-		// read the incoming byte:
-		incomingByte = Serial.read();
-		if (isAlpha(incomingByte)) {
-			Serial.println(char(incomingByte));
-			if (incomingByte >= 'a') {
-				incomingByte -= 'a' - 'A';
-			}
-			switch (incomingByte) {
-				case 'H':
-					printHelp();
-					break;
-				case 'A': // Switch to automatic mode
-					setup_automatic();
-					break;
-				case 'M': // Switch to manual mode
-					setup_manual();
-					break;
-				case 'S': // get status
-					print_status();
-					break;
-				case 'U': // Start print params
-					Serial.print("Start print params each ");
-					Serial.print(PARAMS_REPEAT);
-					Serial.println(" ms");
-					mode_print = params;
-					is_print = true;
-					print_time = millis();
-					break;
-				case 'V': // Stoop print
-					Serial.print("Stop print params or pressure each ");
-					Serial.print(PARAMS_REPEAT);
-					Serial.println(" ms");
-					is_print = false;
-					break;
-				case 'P': // Start print pressure
-					Serial.print("Start print pressure each ");
-					Serial.print(PARAMS_REPEAT);
-					Serial.println(" ms");
-					mode_print = pressure;
-					is_print = true;
-					print_time = millis();
-					break;
-					
-				default:
-					Serial.println("Wrong command");
-					printHelp();
-			}
+void serialEvent() {
+	// read the incoming byte:
+	incomingByte = Serial.read();
+	if (isAlpha(incomingByte)) {
+		Serial.println(char(incomingByte));
+		if (incomingByte >= 'a') {
+			incomingByte -= 'a' - 'A';
+		}
+		switch (incomingByte) {
+			case 'H':
+				printHelp();
+				break;
+			case 'A': // Switch to automatic mode
+				setup_automatic();
+				break;
+			case 'M': // Switch to manual mode
+				setup_manual();
+				break;
+			case 'S': // get status
+				print_status();
+				break;
+			case 'U': // Start print params
+				Serial.print("Start print params each ");
+				Serial.print(PARAMS_REPEAT);
+				Serial.println(" ms");
+				mode_print = params;
+				is_print = true;
+				print_time = millis();
+				break;
+			case 'V': // Stoop print
+				Serial.print("Stop print params or pressure each ");
+				Serial.print(PARAMS_REPEAT);
+				Serial.println(" ms");
+				is_print = false;
+				break;
+			case 'P': // Start print pressure
+				Serial.print("Start print pressure each ");
+				Serial.print(PARAMS_REPEAT);
+				Serial.println(" ms");
+				mode_print = pressure;
+				is_print = true;
+				print_time = millis();
+				break;
+				
+			default:
+				Serial.println("Wrong command");
+				printHelp();
 		}
 	}
+}
+
+// the loop routine runs over and over again forever:
+void loop() {
 	if (is_print) {
 		unsigned long curr_time = millis();
 		if (curr_time > print_time + PARAMS_REPEAT) { // print params
