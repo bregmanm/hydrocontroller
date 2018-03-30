@@ -7,9 +7,17 @@
 
 #define PARAMS_REPEAT 1000
 
+#define LOW_PRESSURE 200
+#define HIGH_PRESSURE 700
+
 enum mode_t {
 	manual,
 	automatic
+};
+
+enum automatic_state_t {
+	rising,
+	falling
 };
 
 enum print_t {
@@ -17,7 +25,16 @@ enum print_t {
 	pressure
 };
 
+enum pump_mode_t {
+	firstPump,
+	secondPump,
+	bothPumps
+};
+
 mode_t mode; // current mode of hydrocontroller
+automatic_state_t automatic_state = rising;
+pump_mode_t pump_mode = bothPumps;
+pump_mode_t current_pump = secondPump;
 
 print_t mode_print;
 
@@ -43,23 +60,64 @@ void printHelp() {
 	Serial.print("V or v - stop print params or pressure each ");
 	Serial.print(PARAMS_REPEAT);
 	Serial.println(" ms");
+	Serial.println("B or b - switch on/off the first pump in manual state");
+	Serial.println("C or C - switch on/off the second pump in manual state");
 }
+
+int readPressure() {
+	return analogRead(A0);
+}
+
+void stop_pumps() {
+	pump1_mode = false;
+	pump2_mode = false;
+}
+
+void manage_pumps() {
+	switch (automatic_state) {
+		case rising:
+			switch (pump_mode) {
+				case firstPump:
+					pump2_mode = false;
+					pump1_mode = true;
+					break;
+				case secondPump:
+					pump1_mode = false;
+					pump2_mode = true;
+					break;
+				case bothPumps:
+					current_pump = (current_pump == firstPump)?secondPump:firstPump;
+					if (current_pump == firstPump) {
+						pump1_mode = true;
+					} else {
+						pump2_mode = true;
+					}
+					
+			}
+		case falling:
+			stop_pumps();
+			break;
+	}
+}
+			
 
 void setup_automatic() {
 	mode = automatic;
+	stop_pumps();
+	automatic_state = (readPressure() > HIGH_PRESSURE)?falling:rising;
+	manage_pumps();
 	Serial.println("Automatic mode");
 }
 
 void setup_manual() {
 	mode = manual;
-	pump1_mode = false;
-	pump2_mode = false;
+	stop_pumps();
 	Serial.println("Manual mode");
 }
 
 void print_pressure() {
 	Serial.print("Pressure is ");
-	Serial.println(analogRead(A0));
+	Serial.println(readPressure());
 }
 
 void print_params() {
@@ -125,6 +183,16 @@ void serialEvent() {
 				is_print = true;
 				print_time = millis();
 				break;
+			case 'B': // Switch on/off the first pump
+				if (mode == manual) {
+					pump1_mode = !pump1_mode;
+				}
+				break;
+			case 'C': // Switch on/off the second pump
+				if (mode == manual) {
+					pump2_mode = !pump2_mode;
+				}
+				break;
 				
 			default:
 				Serial.println("Wrong command");
@@ -135,6 +203,28 @@ void serialEvent() {
 
 // the loop routine runs over and over again forever:
 void loop() {
+	if (mode == automatic) {
+		boolean state_changed = false;
+		int curr_pressure = readPressure();
+		switch (automatic_state) {
+			case rising:
+				if (curr_pressure > HIGH_PRESSURE) {
+					automatic_state = falling;
+					state_changed = true;
+				}
+				break;
+			case falling:
+				if (curr_pressure < LOW_PRESSURE) {
+					automatic_state = rising;
+					state_changed = true;
+				}
+				break;
+		}
+		if (state_changed) {
+			manage_pumps();
+		}
+	}
+
 	if (is_print) {
 		unsigned long curr_time = millis();
 		if (curr_time > print_time + PARAMS_REPEAT) { // print params
