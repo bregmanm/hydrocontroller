@@ -62,6 +62,7 @@ void printHelp() {
 	Serial.println(" ms");
 	Serial.println("B or b - switch on/off the first pump in manual state");
 	Serial.println("C or C - switch on/off the second pump in manual state");
+	Serial.println("D or d - switch first-second-both pumps in automatic state");
 }
 
 int readPressure() {
@@ -92,8 +93,9 @@ void manage_pumps() {
 					} else {
 						pump2_mode = true;
 					}
-					
+					break;
 			}
+			break;
 		case falling:
 			stop_pumps();
 			break;
@@ -131,6 +133,21 @@ void print_params() {
 void print_status() {
 	Serial.print("Current mode is ");
 	Serial.println(mode == automatic?"automatic":"manual");
+	if (mode == automatic) {
+		Serial.println((automatic_state == rising)?"rising":"falling");
+		switch (pump_mode) {
+			case firstPump:
+				Serial.println("firstPump");
+				break;
+			case secondPump:
+				Serial.println("secondPump");
+				break;
+			case bothPumps:
+				Serial.println("bothPumps");
+				Serial.println((current_pump == firstPump)?"firstPump":"secondPump");
+				break;
+		}
+	}		
 	print_params();
 }
 
@@ -191,6 +208,37 @@ void serialEvent() {
 			case 'C': // Switch on/off the second pump
 				if (mode == manual) {
 					pump2_mode = !pump2_mode;
+				}
+				break;
+			case 'D': // Switch first-second-both pumps in automatic mode
+				if (mode == automatic) {
+					switch (pump_mode) {
+						case firstPump:
+							pump_mode = secondPump;
+							if (automatic_state == rising) {
+								pump1_mode = false;
+								pump2_mode = true;
+							}
+							Serial.println("secondPump");
+							break;
+						case secondPump:
+							pump_mode = bothPumps;
+							current_pump = firstPump;
+							if (automatic_state == rising) {
+								pump1_mode = true;
+								pump2_mode = false;
+							}
+							Serial.println("bothPumps");
+							break;
+						case bothPumps:
+							pump_mode = firstPump;
+							if (automatic_state == rising) {
+								pump1_mode = true;
+								pump2_mode = false;
+							}
+							Serial.println("firstPump");
+							break;
+					}
 				}
 				break;
 				
