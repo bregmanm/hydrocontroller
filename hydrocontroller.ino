@@ -12,13 +12,18 @@ enum mode_t {
 	automatic
 };
 
+enum print_t {
+	params,
+	pressure
+};
+
 mode_t mode; // current mode of hydrocontroller
 
-int incomingByte = 0;	// for incoming serial data
-bool is_print_params = false;
-unsigned long print_param_time;
+print_t mode_print;
 
-int volatile pressure = 0; // water pressure
+int incomingByte = 0;	// for incoming serial data
+bool is_print = false;
+unsigned long print_time;
 
 bool volatile pump1_mode = false;
 bool volatile pump2_mode = false;
@@ -32,7 +37,10 @@ void printHelp() {
 	Serial.print("U or u - start print params each ");
 	Serial.print(PARAMS_REPEAT);
 	Serial.println(" ms");
-	Serial.print("V or v - stop print params each ");
+	Serial.print("P or p - start print pressure each ");
+	Serial.print(PARAMS_REPEAT);
+	Serial.println(" ms");
+	Serial.print("V or v - stop print params or pressure each ");
 	Serial.print(PARAMS_REPEAT);
 	Serial.println(" ms");
 }
@@ -49,9 +57,13 @@ void setup_manual() {
 	Serial.println("Manual mode");
 }
 
-void print_params() {
+void print_pressure() {
 	Serial.print("Pressure is ");
-	Serial.println(pressure);
+	Serial.println(analogRead(A0));
+}
+
+void print_params() {
+	print_pressure();
 	Serial.print("Pump1 is ");
 	Serial.println(pump1_mode?"ON":"OFF");
 	Serial.print("Pump2 is ");
@@ -97,14 +109,23 @@ void loop() {
 					Serial.print("Start print params each ");
 					Serial.print(PARAMS_REPEAT);
 					Serial.println(" ms");
-					is_print_params = true;
-					print_param_time = millis();
+					mode_print = params;
+					is_print = true;
+					print_time = millis();
 					break;
-				case 'V': // Stoop print params
-					Serial.print("Stop print params each ");
+				case 'V': // Stoop print
+					Serial.print("Stop print params or pressure each ");
 					Serial.print(PARAMS_REPEAT);
 					Serial.println(" ms");
-					is_print_params = false;
+					is_print = false;
+					break;
+				case 'P': // Start print pressure
+					Serial.print("Start print pressure each ");
+					Serial.print(PARAMS_REPEAT);
+					Serial.println(" ms");
+					mode_print = pressure;
+					is_print = true;
+					print_time = millis();
 					break;
 					
 				default:
@@ -113,11 +134,18 @@ void loop() {
 			}
 		}
 	}
-	if (is_print_params) {
+	if (is_print) {
 		unsigned long curr_time = millis();
-		if (curr_time > print_param_time + PARAMS_REPEAT) { // print params
-			print_param_time = curr_time;
-			print_params();
+		if (curr_time > print_time + PARAMS_REPEAT) { // print params
+			print_time = curr_time;
+			switch (mode_print) {
+				case params:
+					print_params();
+					break;
+				case pressure:
+					print_pressure();
+					break;
+			}
 		}
 	}
 			
