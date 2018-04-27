@@ -2,6 +2,7 @@
 
 int analogWritePin = 3;      // output pin which generates analog voltage
 int currOutputValue = 0;
+int incomingByte = 0;	// for incoming serial data
 
 void setup()
 {
