@@ -60,5 +60,10 @@ void serialEvent() {
 		        | bit (ACIS1)
 			| bit (ACIS0);  // ACIS1, ACIS0: Analog Comparator Interrupt Mode Select (trigger on rising edge)
 	    break;
+	  case 'p';
+	  case 'P': // print comparator's status
+		Serial.print("Comparator: ");
+		Serial.println((ACSR & bit(ACO)) >> 5);
+	    break;
 	}
 }
