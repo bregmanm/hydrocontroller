@@ -2,6 +2,7 @@
 
 int analogWritePin = 3;      // output pin which generates analog voltage
 int currOutputValue = 0;
+int incomingByte = 0;	// for incoming serial data
 volatile boolean triggered;
 
 ISR (ANALOG_COMP_vect)
@@ -15,10 +16,6 @@ void setup()
   pinMode(analogWritePin, OUTPUT);   // sets the pin as output
   analogWrite(analogWritePin, currOutputValue);
   ADCSRB = 0;           // (Disable) ACME: Analog Comparator Multiplexer Enable
-  ACSR =  bit (ACI)     // (Clear) Analog Comparator Interrupt Flag
-        | bit (ACIE)    // Analog Comparator Interrupt Enable
-        | bit (ACIS1);  // ACIS1, ACIS0: Analog Comparator Interrupt Mode Select (trigger on falling edge)
-
 }
 
 void loop()
@@ -49,6 +46,19 @@ void serialEvent() {
 	    }
 	    Serial.println(currOutputValue);
 	    analogWrite(analogWritePin, currOutputValue);
+	    break;
+	  case 'f':
+	  case 'F': // falling edge
+		  ACSR =  bit (ACI)     // (Clear) Analog Comparator Interrupt Flag
+        		| bit (ACIE)    // Analog Comparator Interrupt Enable
+		        | bit (ACIS1);  // ACIS1, ACIS0: Analog Comparator Interrupt Mode Select (trigger on falling edge)
+	    break;
+	  case 'r':
+	  case 'R': // falling edge
+		  ACSR =  bit (ACI)     // (Clear) Analog Comparator Interrupt Flag
+        		| bit (ACIE)    // Analog Comparator Interrupt Enable
+		        | bit (ACIS1)
+			| bit (ACIS0);  // ACIS1, ACIS0: Analog Comparator Interrupt Mode Select (trigger on rising edge)
 	    break;
 	}
 }
