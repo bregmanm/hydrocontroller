@@ -1,11 +1,38 @@
+#define BAUD_RATE 9600
+
 int analogWritePin = 3;      // output pin which generates analog voltage
+int currOutputValue = 0;
 
 void setup()
 {
+  Serial.begin(BAUD_RATE);
   pinMode(analogWritePin, OUTPUT);   // sets the pin as output
+  analogWrite(analogWritePin, currOutputValue);
 }
 
 void loop()
 {
-  analogWrite(analogWritePin, val / 4);  // analogRead values go from 0 to 1023, analogWrite values from 0 to 255
+}
+
+void serialEvent() {
+	// read the incoming byte:
+	incomingByte = Serial.read();
+	switch (incomingByte) {
+	  case '+':
+	    currOutputValue += 20;
+	    if (currOutputValue > 255) {
+		currOutputValue = 255;
+	    }
+	    Serial.println(currOutputValue);
+	    analogWrite(analogWritePin, currOutputValue);
+	    break;
+	  case '-':
+	    currOutputValue -= 20;
+	    if (currOutputValue < 0) {
+		currOutputValue = 0;
+	    }
+	    Serial.println(currOutputValue);
+	    analogWrite(analogWritePin, currOutputValue);
+	    break;
+	}
 }
