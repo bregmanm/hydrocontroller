@@ -39,8 +39,24 @@ void serialEvent() {
 	    Serial.println(currOutputValue);
 	    analogWrite(analogWritePin, currOutputValue);
 	    break;
+	  case '<':
+	    currOutputValue ++;
+	    if (currOutputValue > 255) {
+		currOutputValue = 255;
+	    }
+	    Serial.println(currOutputValue);
+	    analogWrite(analogWritePin, currOutputValue);
+	    break;
 	  case '-':
 	    currOutputValue -= 20;
+	    if (currOutputValue < 0) {
+		currOutputValue = 0;
+	    }
+	    Serial.println(currOutputValue);
+	    analogWrite(analogWritePin, currOutputValue);
+	    break;
+	  case '>':
+	    currOutputValue --;
 	    if (currOutputValue < 0) {
 		currOutputValue = 0;
 	    }
