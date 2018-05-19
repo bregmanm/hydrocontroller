@@ -153,7 +153,10 @@ void print_status() {
 
 // the setup routine runs once when you press reset:
 void setup() {
-	Serial.begin(BAUD_RATE);
+  Serial.begin(BAUD_RATE);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
 	setup_automatic();
 }
 
