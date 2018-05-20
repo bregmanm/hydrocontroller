@@ -25,10 +25,10 @@ IPAddress ip(192, 168, 0, 110);
 char inputBuffer[INPUT_BUFFER_LENGTH];
 
 enum state_t {
-	method,
-	path,
-	protocol,
-	body
+  method,
+  path,
+  protocol,
+  body
 };
 
 void switchTX_HI() {
@@ -44,7 +44,7 @@ void switchTX_LOW() {
 void transmitString(String s) {
   switchTX_HI();
   for (int i = 0; i < s.length(); i++) {
-    Serial.print(s.charAt(i);
+    Serial.print(s.charAt(i));
     delay(1);
   }
   Serial.print(END_OF_UNIT);
@@ -52,23 +52,28 @@ void transmitString(String s) {
   switchTX_LOW();
 }
 
-void processRequest(String requestMethod, String requestPath, String requestProtocol, String requestBody) {
+void processRequest(EthernetClient client, String requestMethod, String requestPath, String requestProtocol, String requestBody) {
           // test: send to hydrocontroller a symbol after "/" in the path and return all response
           // example: /+, /-
+          Serial.println("Process request: 1");
           String response = "No POST method";
-          if ("POST".equals(requestMethod)) {
+          if (String("POST").equals(requestMethod)) {
+            Serial.println("Process request: 2");
             size_t bytesReceived;
             transmitString(requestPath.substring(1));
             bytesReceived  = Serial.readBytesUntil(END_OF_UNIT, inputBuffer, INPUT_BUFFER_LENGTH);
+            Serial.print("Process request: 3 bytesReceived ");
+            Serial.println(bytesReceived);
             if (!bytesReceived) {
+              Serial.println("Process request: 4");
               response = "No responce from hydrocontroller";
             } else {
+              Serial.println("Process request: 5");
               inputBuffer[bytesReceived] = '\0';
-              response = Sring(inputBuffer);
+              response = String(inputBuffer);
             }
           }
-            
-
+          Serial.println("Process request: 6");
           // send a standard http response header
           client.println(requestProtocol + " 200 OK");
           client.println("Content-Type: text/html");
@@ -102,8 +107,8 @@ void setup() {
   // start the Ethernet connection and the server:
   Ethernet.begin(mac, ip);
   server.begin();
-  // Serial.print("server is at ");
-  // Serial.println(Ethernet.localIP());
+  Serial.print("server is at ");
+  Serial.println(Ethernet.localIP());
 }
 
 
@@ -112,24 +117,25 @@ void loop() {
   EthernetClient client = server.available();
   if (client) {
     state_t state = method; // start read method
-    String httpMethod = string();
+    String httpMethod = String();
     String httpPath = String();
     String httpProtocol = String();
     String httpBody = String();
-    // Serial.println("new client");
+    Serial.println("new client");
     // an http request ends with a blank line
     boolean currentLineIsBlank = true;
     while (client.connected()) {
-      if (client.available()) {
+     if (client.available()) {
         char c = client.read();
         if (c == '\n') {
           if (currentLineIsBlank) {
-            processRequest(httpMethod, httpPath, httpProtocol, httpBody);
+            processRequest(client, httpMethod, httpPath, httpProtocol, httpBody);
             break; // end of request
           } else { // start of new line in request
-            currentLineIsBlank = true;
+           currentLineIsBlank = true;
+            continue;
           }
-        } else { // line is not blank
+        } else if (!isWhitespace(c) && !(int(c) == 13)) { // line is not blank
           currentLineIsBlank = false;
         }
         switch (state) {
@@ -138,7 +144,7 @@ void loop() {
               if (httpMethod.length() == 0) { // space before method
                 break; // ignore
               } else { // space after method
-                state = path;
+                 state = path;
               }
             } else {
               httpMethod += c;
@@ -170,10 +176,11 @@ void loop() {
             if (isWhitespace(c)) {
               if (httpBody.length() == 0) { // space before body
                 break; // ignore
-            } else {
-              httpProtocol += c;
+              } else {
+                httpProtocol += c;
+              }
+              break;
             }
-            break;
         }
         // Serial.write(c);
         // if you've gotten to the end of the line (received a newline
