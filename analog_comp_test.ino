@@ -19,7 +19,7 @@ void switchTX_LOW() {
 void transmitString(String s) {
   switchTX_HI();
   for (int i = 0; i < s.length(); i++) {
-    Serial.print(s.charAt(i);
+    Serial.print(s.charAt(i));
     delay(1);
   }
   switchTX_LOW();
@@ -56,10 +56,10 @@ void loop()
 }
 
 void serialEvent() {
-        size_t bytesReceived = Serial.readBytesUntil(END_OF_UNIT, inputBuffer, INPUT_BUFFER_LENGTH);
-        if (!bytesReceived) { // error input
-          return;
-        }
+	size_t bytesReceived = Serial.readBytesUntil(END_OF_UNIT, inputBuffer, INPUT_BUFFER_LENGTH);
+	if (!bytesReceived) { // error input
+	  return;
+	}
 	// read the incoming byte:
 	incomingByte = inputBuffer[0];
 	switch (incomingByte) {
