@@ -3,6 +3,8 @@
 
 */
 
+#include "pump.h"
+
 #define BAUD_RATE 9600
 
 #define PARAMS_REPEAT 1000
@@ -85,8 +87,8 @@ print_t mode_print;
 bool is_print = false;
 unsigned long print_time;
 
-bool volatile pump1_mode = false;
-bool volatile pump2_mode = false;
+Pump pump1 = Pump(0);
+Pump pump2 = Pump(1);
 
 void printHelp() {
 	switchTX_HI();
@@ -115,8 +117,8 @@ int readPressure() {
 }
 
 void stop_pumps() {
-	pump1_mode = false;
-	pump2_mode = false;
+	pump1.switchOff();
+	pump2.switchOff();
 }
 
 void manage_pumps() {
@@ -124,19 +126,19 @@ void manage_pumps() {
 		case rising:
 			switch (pump_mode) {
 				case firstPump:
-					pump2_mode = false;
-					pump1_mode = true;
+					pump2.switchOff();
+					pump1.switchOn();
 					break;
 				case secondPump:
-					pump1_mode = false;
-					pump2_mode = true;
+					pump1.switchOff();
+					pump2.switchOn();
 					break;
 				case bothPumps:
 					current_pump = (current_pump == firstPump)?secondPump:firstPump;
 					if (current_pump == firstPump) {
-						pump1_mode = true;
+						pump1.switchOn();
 					} else {
-						pump2_mode = true;
+						pump2.switchOn();
 					}
 					break;
 			}
@@ -171,10 +173,10 @@ void print_pressure() {
 void print_params() {
 	print_pressure();
 	transmitStringHigh("Pump1 is ");
-	transmitStringHigh(pump1_mode?"ON":"OFF");
+	transmitStringHigh(pump1.getState()?"ON":"OFF");
 	transmitStringHigh("\n");
 	transmitStringHigh("Pump2 is ");
-	transmitStringHigh(pump2_mode?"ON":"OFF");
+	transmitStringHigh(pump2.getState()?"ON":"OFF");
 	transmitStringHigh("\n");
 }
 
@@ -255,13 +257,11 @@ void processCommand(String cmd) {
 */
 				case 'B': // Switch on/off the first pump
 				if (mode == manual) {
-					pump1_mode = !pump1_mode;
+                                        pump1.exchange();
 				}
 				break;
 			case 'C': // Switch on/off the second pump
-				if (mode == manual) {
-					pump2_mode = !pump2_mode;
-				}
+                                        pump2.exchange();
 				break;
 			case 'D': // Switch first-second-both pumps in automatic mode
 				if (mode == automatic) {
@@ -269,8 +269,8 @@ void processCommand(String cmd) {
 						case firstPump:
 							pump_mode = secondPump;
 							if (automatic_state == rising) {
-								pump1_mode = false;
-								pump2_mode = true;
+								pump1.switchOff();
+								pump2.switchOn();
 							}
 							Serial.println("secondPump");
 							break;
@@ -278,16 +278,16 @@ void processCommand(String cmd) {
 							pump_mode = bothPumps;
 							current_pump = firstPump;
 							if (automatic_state == rising) {
-								pump1_mode = true;
-								pump2_mode = false;
+								pump1.switchOn();
+								pump2.switchOff();
 							}
 							Serial.println("bothPumps");
 							break;
 						case bothPumps:
 							pump_mode = firstPump;
 							if (automatic_state == rising) {
-								pump1_mode = true;
-								pump2_mode = false;
+								pump1.switchOn();
+								pump2.switchOff();
 							}
 							Serial.println("firstPump");
 							break;
