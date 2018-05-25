@@ -32,3 +32,13 @@ Pump* PumpsControl::getCurrentPump() {
   return pumps[current_pump];
 }
 
+void PumpsControl::handleInterruptAnalogComp(uint8_t isRising) {
+  if (isRising) { // rising - switch pump off
+    pumps[current_pump]->switchOff();
+    switchCurrentPump();
+  } else { // falling - switch pump on
+    pumps[current_pump]->switchOn();
+  }
+}
+
+

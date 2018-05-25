@@ -15,5 +15,6 @@ public:
   void addPump(Pump*); // add pump to array of pumps
   void switchCurrentPump(); // set the next pump as a current
   Pump* getCurrentPump(); // get the current pump
+  void handleInterruptAnalogComp(uint8_t); // calls when interrupt from analog comparator is occured. Input value: 0 - interrupt on falling, else - on rising
 };
 #endif

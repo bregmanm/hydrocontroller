@@ -24,5 +24,23 @@ int main() {
   pumpsControl.getCurrentPump()->switchOn();
   std::cout << "Switch off the current pump: must be on pin 5\n";
   pumpsControl.getCurrentPump()->switchOff();
+  std::cout << "Interrupt from analog comparator: falling.\n";
+  std::cout << "Pump1 must be switched on.\n";
+  pumpsControl.handleInterruptAnalogComp(0);
+  std::cout << "Interrupt from analog comparator: rising.\n";
+  std::cout << "Pump1 must be switched off.\n";
+  pumpsControl.handleInterruptAnalogComp(1);
+  std::cout << "Interrupt from analog comparator: falling.\n";
+  std::cout << "Pump2 must be switched on.\n";
+  pumpsControl.handleInterruptAnalogComp(0);
+  std::cout << "Interrupt from analog comparator: rising.\n";
+  std::cout << "Pump2 must be switched off.\n";
+  pumpsControl.handleInterruptAnalogComp(1);
+  std::cout << "Interrupt from analog comparator: falling.\n";
+  std::cout << "Pump1 must be switched on.\n";
+  pumpsControl.handleInterruptAnalogComp(0);
+  std::cout << "Interrupt from analog comparator: rising.\n";
+  std::cout << "Pump1 must be switched off.\n";
+  pumpsControl.handleInterruptAnalogComp(1);
   return 0;
 }
