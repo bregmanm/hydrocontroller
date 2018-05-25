@@ -42,5 +42,11 @@ int main() {
   std::cout << "Interrupt from analog comparator: rising.\n";
   std::cout << "Pump1 must be switched off.\n";
   pumpsControl.handleInterruptAnalogComp(1);
+  std::cout << "Current pump is pump2.\n";
+  std::cout << "Broke pump1.\n";
+  pump1.setBroken(1);
+  std::cout << "Interrupt from analog comparator: falling.\n";
+  std::cout << "Pump2 (not pump1) must be switched on.\n";
+  pumpsControl.handleInterruptAnalogComp(0);
   return 0;
 }
