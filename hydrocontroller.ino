@@ -3,7 +3,7 @@
 
 */
 
-#include "pump.h"
+#include "pumps_control.h"
 
 #define BAUD_RATE 9600
 
@@ -89,6 +89,8 @@ unsigned long print_time;
 
 Pump pump1 = Pump(0);
 Pump pump2 = Pump(1);
+PumpsControl pumpsControl = PumpsControl();
+
 
 void printHelp() {
 	switchTX_HI();
@@ -308,6 +310,9 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  pumpsControl.addPump(&pump1);
+  pumpsControl.addPump(&pump2);
+
   cmdPtr = inputBuffer;
   setup_automatic();
 }

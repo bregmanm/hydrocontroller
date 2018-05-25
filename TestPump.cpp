@@ -7,7 +7,7 @@ int main() {
   Pump pump(5);
   std::cout << "Switch on\n";
   pump.switchOn();
-  std::cout << "Switch ff\n";
+  std::cout << "Switch off\n";
   pump.switchOff();
   std::cout << "Exchange\n";
   pump.exchange();
