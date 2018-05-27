@@ -9,8 +9,6 @@
 
 #define PARAMS_REPEAT 1000
 
-#define LOW_PRESSURE 200
-#define HIGH_PRESSURE 700
 #define INPUT_BUFFER_LENGTH 500
 #define END_OF_UNIT '\r'
 #define SERIAL_TIMEOUT 5000
@@ -201,10 +199,10 @@ void setup() {
   pumpsControl.addPump(&pump1);
   pumpsControl.addPump(&pump2);
   pumpsControl. setPinAnalogWriteReferenceVoltage(3);
-  //TEMP
-  pumpsControl.setLowThreshold(30);
-  pumpsControl.setHighThreshold(100);
-  pumpsControl.setStartPpressureThreshold(55);
+  //TEMP - values for light sensor!!!
+  pumpsControl.setLowThreshold(81);
+  pumpsControl.setHighThreshold(201);
+  pumpsControl.setStartPpressureThreshold(400);
 
   pumpsControl. setPinAnalogWriteReferenceVoltage(3);
   pumpsControl. setPressureAnalogChannel(0);
