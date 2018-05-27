@@ -12,8 +12,8 @@ enum h_mode_t { // mode of pump control
 };
 
 enum automatic_state_t {
-	RISING,
-	FALLING
+	H_RISING,
+	H_FALLING
 };
 
 class PumpsControl {
@@ -38,7 +38,10 @@ public:
   void addPump(Pump*); // add pump to array of pumps
   void switchCurrentPump(); // set the next pump as a current
   Pump* getCurrentPump(); // get the current pump
+  h_mode_t getMode(); // get current mode
   void setMode(h_mode_t); // set current mode: auto or manual and start the appropriate setup. Must be called at the end of other settings
+  automatic_state_t getAutomaticState(); // get current state in automatic mode
+  uint8_t getCurrentPumpNumber(); // get current pump number in the auth mode
   void setPinAnalogWriteReferenceVoltage(uint8_t); // set number of pin for analog write reference voltage
   void setLowThreshold(int); // set low threshold value
   void setHighThreshold(int); // set high threshold value

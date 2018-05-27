@@ -30,15 +30,15 @@ int main() {
   assert(LOW == pump2.getState());
 
   std::cout << "Handle analog comparator interrupt - pump1 must be stopped (pin 0)\n";
-  pumpsControl. handleInterruptAnalogComp();
+  pumpsControl.handleInterruptAnalogComp();
   assert(LOW == pump1.getState());
   assert(LOW == pump2.getState());
   std::cout << "Handle analog comparator interrupt - pump2 must be started (pin 1)\n";
-  pumpsControl. handleInterruptAnalogComp();
+  pumpsControl.handleInterruptAnalogComp();
   assert(LOW == pump1.getState());
   assert(HIGH == pump2.getState());
   std::cout << "Handle analog comparator interrupt - pump2 must be stopped (pin 1)\n";
-  pumpsControl. handleInterruptAnalogComp();
+  pumpsControl.handleInterruptAnalogComp();
   assert(LOW == pump1.getState());
   assert(LOW == pump2.getState());
 

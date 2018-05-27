@@ -36,6 +36,10 @@ Pump* PumpsControl::getCurrentPump() {
   return pumps[current_pump];
 }
 
+h_mode_t PumpsControl::getMode() {
+  return mode;
+}
+
 void PumpsControl::setMode(h_mode_t mode) {
   setup_common();
   this->mode = mode;
@@ -49,6 +53,14 @@ void PumpsControl::setMode(h_mode_t mode) {
       setup_auto();
       break;
   }
+}
+
+automatic_state_t PumpsControl::getAutomaticState() {
+  return automatic_state;
+}
+
+uint8_t PumpsControl::getCurrentPumpNumber() {
+  return current_pump;
 }
 
 void PumpsControl::setup_common() {
@@ -76,7 +88,7 @@ void PumpsControl::setup_auto() {
 }
 
 void  PumpsControl::setup_auto_rising() {
-  automatic_state = RISING;
+  automatic_state = H_RISING;
   analogWrite(pin_analog_write_ref_voltage, high_threshold);
 
 #ifdef TEST
@@ -91,7 +103,7 @@ void  PumpsControl::setup_auto_rising() {
 }
 
 void PumpsControl::setup_auto_falling() {
-  automatic_state = FALLING;
+  automatic_state = H_FALLING;
   analogWrite(pin_analog_write_ref_voltage, low_threshold);
 #ifdef TEST
   std::cout << "Set ACSR to rising edge" << std::endl;
@@ -141,11 +153,11 @@ void PumpsControl::handleInterruptAnalogComp() {
     return;
   }
   switch (automatic_state) {
-    case RISING:
+    case H_RISING:
       setup_auto_falling();
       switchCurrentPump();
       break;
-    case FALLING:
+    case H_FALLING:
       setup_auto_rising();
       break;
   }

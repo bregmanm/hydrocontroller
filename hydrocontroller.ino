@@ -55,31 +55,11 @@ void transmitString(String s) {
   transmitEndOfUnit();
 }
 
-enum mode_t {
-	manual,
-	automatic
-};
-
-enum automatic_state_t {
-	rising,
-	falling
-};
-
 enum print_t {
 	params,
 	pressure
 };
 
-enum pump_mode_t {
-	firstPump,
-	secondPump,
-	bothPumps
-};
-
-mode_t mode; // current mode of hydrocontroller
-automatic_state_t automatic_state = rising;
-pump_mode_t pump_mode = bothPumps;
-pump_mode_t current_pump = secondPump;
 byte *cmdPtr;
 
 print_t mode_print;
@@ -118,54 +98,6 @@ int readPressure() {
 	return analogRead(A0);
 }
 
-void stop_pumps() {
-	pump1.switchOff();
-	pump2.switchOff();
-}
-
-void manage_pumps() {
-	switch (automatic_state) {
-		case rising:
-			switch (pump_mode) {
-				case firstPump:
-					pump2.switchOff();
-					pump1.switchOn();
-					break;
-				case secondPump:
-					pump1.switchOff();
-					pump2.switchOn();
-					break;
-				case bothPumps:
-					current_pump = (current_pump == firstPump)?secondPump:firstPump;
-					if (current_pump == firstPump) {
-						pump1.switchOn();
-					} else {
-						pump2.switchOn();
-					}
-					break;
-			}
-			break;
-		case falling:
-			stop_pumps();
-			break;
-	}
-}
-			
-
-void setup_automatic() {
-	mode = automatic;
-	stop_pumps();
-	automatic_state = (readPressure() > HIGH_PRESSURE)?falling:rising;
-	manage_pumps();
-	transmitString("Automatic mode\n");
-}
-
-void setup_manual() {
-	mode = manual;
-	stop_pumps();
-	transmitString("Manual mode\n");
-}
-
 void print_pressure() {
 	transmitStringHigh("Pressure is ");
 	transmitStringHigh(String(readPressure()));
@@ -185,26 +117,15 @@ void print_params() {
 void print_status() {
 	switchTX_HI();
 	transmitStringHigh("Current mode is ");
-	transmitStringHigh(mode == automatic?"automatic":"manual");
+	transmitStringHigh(pumpsControl.getMode() == AUTO?"automatic":"manual");
 	transmitStringHigh("\n");
 
-	if (mode == automatic) {
-		transmitStringHigh((automatic_state == rising)?"rising":"falling");
+	if (pumpsControl.getMode() == AUTO) {
+		transmitStringHigh((pumpsControl.getAutomaticState() == H_RISING)?"rising":"falling");
+		transmitStringHigh("\n");
+		transmitStringHigh((pumpsControl.getCurrentPumpNumber() == 0)?"first pump":"second pump");
 		transmitStringHigh("\n");
 
-		switch (pump_mode) {
-			case firstPump:
-				transmitStringHigh("firstPump\n");
-				break;
-			case secondPump:
-				transmitStringHigh("secondPump\n");
-				break;
-			case bothPumps:
-				transmitStringHigh("bothPumps\n");
-				transmitStringHigh((current_pump == firstPump)?"firstPump":"secondPump");
-				transmitStringHigh("\n");
-				break;
-		}
 	}		
 	print_params();
 	transmitEndOfUnit();
@@ -225,10 +146,10 @@ void processCommand(String cmd) {
 				printHelp();
 				break;
 			case 'A': // Switch to automatic mode
-				setup_automatic();
+				pumpsControl.setMode(AUTO);
 				break;
 			case 'M': // Switch to manual mode
-				setup_manual();
+				pumpsControl.setMode(MANUAL);
 				break;
 			case 'S': // get status
 				print_status();
@@ -257,45 +178,6 @@ void processCommand(String cmd) {
 				print_time = millis();
 				break;
 */
-				case 'B': // Switch on/off the first pump
-				if (mode == manual) {
-                                        pump1.exchange();
-				}
-				break;
-			case 'C': // Switch on/off the second pump
-                                        pump2.exchange();
-				break;
-			case 'D': // Switch first-second-both pumps in automatic mode
-				if (mode == automatic) {
-					switch (pump_mode) {
-						case firstPump:
-							pump_mode = secondPump;
-							if (automatic_state == rising) {
-								pump1.switchOff();
-								pump2.switchOn();
-							}
-							Serial.println("secondPump");
-							break;
-						case secondPump:
-							pump_mode = bothPumps;
-							current_pump = firstPump;
-							if (automatic_state == rising) {
-								pump1.switchOn();
-								pump2.switchOff();
-							}
-							Serial.println("bothPumps");
-							break;
-						case bothPumps:
-							pump_mode = firstPump;
-							if (automatic_state == rising) {
-								pump1.switchOn();
-								pump2.switchOff();
-							}
-							Serial.println("firstPump");
-							break;
-					}
-				}
-				break;
 				
 			default:
 				transmitString("Wrong command\n");
@@ -303,6 +185,12 @@ void processCommand(String cmd) {
 		}
 	}
 }
+
+ISR (ANALOG_COMP_vect)
+  {
+    pumpsControl.handleInterruptAnalogComp();
+  }
+
 
 // the setup routine runs once when you press reset:
 void setup() {
@@ -312,9 +200,19 @@ void setup() {
   }
   pumpsControl.addPump(&pump1);
   pumpsControl.addPump(&pump2);
+  pumpsControl. setPinAnalogWriteReferenceVoltage(3);
+  //TEMP
+  pumpsControl.setLowThreshold(30);
+  pumpsControl.setHighThreshold(100);
+  pumpsControl.setStartPpressureThreshold(55);
+
+  pumpsControl. setPinAnalogWriteReferenceVoltage(3);
+  pumpsControl. setPressureAnalogChannel(0);
+
+  pumpsControl.setMode(AUTO);
+
 
   cmdPtr = inputBuffer;
-  setup_automatic();
 }
 
 void serialEvent() {
@@ -337,27 +235,6 @@ void serialEvent() {
 
 // the loop routine runs over and over again forever:
 void loop() {
-	if (mode == automatic) {
-		boolean state_changed = false;
-		int curr_pressure = readPressure();
-		switch (automatic_state) {
-			case rising:
-				if (curr_pressure > HIGH_PRESSURE) {
-					automatic_state = falling;
-					state_changed = true;
-				}
-				break;
-			case falling:
-				if (curr_pressure < LOW_PRESSURE) {
-					automatic_state = rising;
-					state_changed = true;
-				}
-				break;
-		}
-		if (state_changed) {
-			manage_pumps();
-		}
-	}
 
 	if (is_print) {
 		unsigned long curr_time = millis();
@@ -376,12 +253,12 @@ void loop() {
 		}
 	}
 			
-	/*	
+/*	
 
   // read the input on analog pin 0:
   int sensorValue = analogRead(A0);
   // print out the value you read:
   Serial.println(sensorValue);
   delay(1);        // delay in between reads for stability
-  */
+ */
 }
