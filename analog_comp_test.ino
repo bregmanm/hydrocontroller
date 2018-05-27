@@ -102,7 +102,7 @@ void serialEvent() {
 		        | bit (ACIS1);  // ACIS1, ACIS0: Analog Comparator Interrupt Mode Select (trigger on falling edge)
 	    break;
 	  case 'r':
-	  case 'R': // falling edge
+	  case 'R': // rising edge
 		  ACSR =  bit (ACI)     // (Clear) Analog Comparator Interrupt Flag
         		| bit (ACIE)    // Analog Comparator Interrupt Enable
 		        | bit (ACIS1)
