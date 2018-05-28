@@ -3,6 +3,7 @@
 // Control of pumps group
 
 #include "pump.h"
+#include "arduino_regs.h"
 
 #define MAX_PUMPS_COUNT 2
 
@@ -25,7 +26,6 @@ class PumpsControl {
   automatic_state_t automatic_state; // current state in the automatic mode: rising or falling
   int low_threshold, high_threshold; // reference voltages for analog comparator thresholds
   uint8_t pressure_analog_channel; // analog channel for reading pressure
-  int startPpressureThreshold; // Value for comparing with start pressure for setting RISING or FALLING auto mode
 
   void  setup_common(); //common setup for all modes
   void  setup_manual(); //start work manual mode
@@ -45,7 +45,6 @@ public:
   void setPinAnalogWriteReferenceVoltage(uint8_t); // set number of pin for analog write reference voltage
   void setLowThreshold(int); // set low threshold value
   void setHighThreshold(int); // set high threshold value
-  void setStartPpressureThreshold(int); // setting start pressure threshold
   void setPressureAnalogChannel(uint8_t); // set the number of pressure analog channel
   void handleInterruptAnalogComp(); // calls when interrupt from analog comparator is occured. Input value: 0 - interrupt on falling, else - on rising
   void switchOnCurrentPump(); // switch on current pump on manual mode
