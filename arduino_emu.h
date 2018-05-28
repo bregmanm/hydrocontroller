@@ -2,9 +2,7 @@
 #define _ARDUINO_EMU_
 
 #include <stdint.h>
-
-#define TEST_ANALOG_READ_VALUE 50
-
+#include "arduino_regs.h"
 
 #define HIGH 0x1
 #define LOW  0x0
@@ -18,8 +16,8 @@ extern "C"{
 extern uint8_t ADCSRB;
 void pinMode(uint8_t, uint8_t);
 void digitalWrite(uint8_t, uint8_t);
-int analogRead(uint8_t);
 void analogWrite(uint8_t, int);
+void setAco(uint8_t); // set value to ACO emulation
 
 #ifdef __cplusplus
 } // extern "C"

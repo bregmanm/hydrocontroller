@@ -17,8 +17,8 @@ int main() {
   std::cout << "Init: set high and low thresholds\n";
   pumpsControl.setLowThreshold(20);
   pumpsControl.setHighThreshold(100);
-  std::cout << "Init: set start pressure threshold more than reading value\n";
-  pumpsControl.setStartPpressureThreshold(TEST_ANALOG_READ_VALUE + 1);
+  std::cout << "Init: pressure value from sensor is less than halph of thresholds gate\n";
+  setAco(0);
   std::cout << "Init: set pin number for analog comparator reference voltage - pin3\n";
   pumpsControl. setPinAnalogWriteReferenceVoltage(3);
   std::cout << "Init: set number of pressure reading analog channel - 0\n";
@@ -42,8 +42,8 @@ int main() {
   assert(LOW == pump1.getState());
   assert(LOW == pump2.getState());
 
-  std::cout << "Init: set start pressure threshold less than reading value\n";
-  pumpsControl.setStartPpressureThreshold(TEST_ANALOG_READ_VALUE - 1);
+   std::cout << "Init: pressure value from sensor is more than halph of thresholds gate\n";
+  setAco(1 << 5);
 
   std::cout << "Init: set auto mode - pump1 must be not started (pin 0)\n";
   pumpsControl.setMode(AUTO);

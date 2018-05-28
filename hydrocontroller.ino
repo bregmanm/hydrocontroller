@@ -202,7 +202,6 @@ void setup() {
   //TEMP - values for light sensor!!!
   pumpsControl.setLowThreshold(81);
   pumpsControl.setHighThreshold(201);
-  pumpsControl.setStartPpressureThreshold(400);
 
   pumpsControl. setPinAnalogWriteReferenceVoltage(3);
   pumpsControl. setPressureAnalogChannel(0);
