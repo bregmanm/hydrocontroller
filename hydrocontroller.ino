@@ -4,6 +4,8 @@
 */
 
 #include "pumps_control.h"
+#include "eeprom_params.h"
+#include <EEPROM.h>
 
 #define BAUD_RATE 9600
 
@@ -12,6 +14,11 @@
 #define INPUT_BUFFER_LENGTH 500
 #define END_OF_UNIT '\r'
 #define SERIAL_TIMEOUT 5000
+
+#define EEPROM_START_ADDRESS 0
+
+// params to be saved in EEPROM
+HydrParams hydrParams;
 
 // RS485 params
 const uint8_t     PIN_direction_TX_RX = 10;
@@ -76,19 +83,13 @@ void printHelp() {
 	transmitStringHigh("H or h - print help\n");
 	transmitStringHigh("A or a - switch to the automatic mode\n");
 	transmitStringHigh("M or m - switch to the manual mode\n");
-	transmitStringHigh("S or s - print current status\n");
-	transmitStringHigh("U or u - start print params each ");
-	transmitStringHigh(String(PARAMS_REPEAT));
-	transmitStringHigh(" ms\n");
-	transmitStringHigh("P or p - start print pressure each ");
-	transmitStringHigh(String(PARAMS_REPEAT));
-	transmitStringHigh(" ms\n");
-	transmitStringHigh("V or v - stop print params or pressure each ");
-	transmitStringHigh(String(PARAMS_REPEAT));
-	transmitStringHigh(" ms\n");
+	transmitStringHigh("P or P - print current status\n");
 	transmitStringHigh("B or b - switch on/off the first pump in manual state\n");
 	transmitStringHigh("C or C - switch on/off the second pump in manual state\n");
 	transmitStringHigh("D or d - switch first-second-both pumps in automatic state\n");
+	transmitStringHigh("S or S - save parameters to EEPROM\n");
+	transmitStringHigh("L or l - set value of the low threshold\n");
+	transmitStringHigh("N or N - set value of the high threshold\n");
 	transmitEndOfUnit();
 }
 
@@ -129,6 +130,20 @@ void print_status() {
 	transmitEndOfUnit();
 }
 
+void loadParamsFromEEPROM(int startAddress, uint8_t* target, std::size_t length) {
+	std::size_t i;
+	for (i = 0; i < length; i++) {
+		*target++ = EEPROM.read(startAddress++);
+	}
+}
+
+void saveParamsToEEPROM(int startAddress, uint8_t* source, std::size_t length) {
+	std::size_t i;
+	for (i = 0; i < length; i++) {
+		EEPROM.update(startAddress++, *source++);
+	}
+}
+
 void processCommand(String cmd) {
     if (cmd.length() == 0) { // empty command - ignore
 		return;
@@ -149,34 +164,19 @@ void processCommand(String cmd) {
 			case 'M': // Switch to manual mode
 				pumpsControl.setMode(MANUAL);
 				break;
-			case 'S': // get status
+			case 'P': // get status
 				print_status();
 				break;
-/*
-				case 'U': // Start print params
-				Serial.print("Start print params each ");
-				Serial.print(PARAMS_REPEAT);
-				Serial.println(" ms");
-				mode_print = params;
-				is_print = true;
-				print_time = millis();
+			case 'S': // save parameters to EEPROM
+				saveParamsToEEPROM(EEPROM_START_ADDRESS, &hydrParams, sizeof(hydrParams);
 				break;
-			case 'V': // Stoop print
-				Serial.print("Stop print params or pressure each ");
-				Serial.print(PARAMS_REPEAT);
-				Serial.println(" ms");
-				is_print = false;
-				break;
-			case 'P': // Start print pressure
-				Serial.print("Start print pressure each ");
-				Serial.print(PARAMS_REPEAT);
-				Serial.println(" ms");
-				mode_print = pressure;
-				is_print = true;
-				print_time = millis();
-				break;
-*/
-				
+			case 'L': // set value of the low threshold
+			    hydrParams.low_threshold = cmd.substring(1).toInt();
+			    break;
+			case 'N': // set value of the high threshold
+			    hydrParams.high_threshold = cmd.substring(1).toInt();
+			    break;
+
 			default:
 				transmitString("Wrong command\n");
 				// printHelp();
@@ -192,6 +192,8 @@ ISR (ANALOG_COMP_vect)
 
 // the setup routine runs once when you press reset:
 void setup() {
+  loadParamsFromEEPROM(EEPROM_START_ADDRESS, &hydrParams, sizeof(hydrParams);
+  
   Serial.begin(BAUD_RATE);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
@@ -199,11 +201,9 @@ void setup() {
   pumpsControl.addPump(&pump1);
   pumpsControl.addPump(&pump2);
   pumpsControl. setPinAnalogWriteReferenceVoltage(3);
-  //TEMP - values for light sensor!!!
-  pumpsControl.setLowThreshold(81);
-  pumpsControl.setHighThreshold(201);
+  pumpsControl.setLowThreshold(hydrParams.low_threshold); // 81 for light sensor!!!
+  pumpsControl.setHighThreshold(hydrParams.high_threshold); // 201 for light sensor!!!
 
-  pumpsControl. setPinAnalogWriteReferenceVoltage(3);
   pumpsControl. setPressureAnalogChannel(0);
 
   pumpsControl.setMode(AUTO);

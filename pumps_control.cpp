@@ -119,10 +119,6 @@ void PumpsControl::switchOffCurrentPump() {
   }
 }
 
-void PumpsControl::setPressureAnalogChannel(uint8_t pressure_analog_channel) {
-  this-> pressure_analog_channel = pressure_analog_channel;
-}
-
 void PumpsControl::handleInterruptAnalogComp() {
   if (mode != AUTO) { // handle interrupt in auto mode only
     return;
